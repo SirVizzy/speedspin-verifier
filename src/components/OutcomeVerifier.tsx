@@ -67,15 +67,23 @@ export function OutcomeVerifier() {
     const processor = getProcessor(values.gamemode);
 
     const results: RoundResult[] = [];
-
-    for (let round = 1; round <= rounds; round++) {
-      const roundSeed = `${seed}:${round}`;
-      const outcome = processor.process(roundSeed);
+    if (rounds === 1) {
+      const outcome = processor.process(seed);
       results.push({
-        round: round,
-        seed: roundSeed,
+        round: 1,
+        seed: seed,
         outcome,
       });
+    } else {
+      for (let round = 1; round <= rounds; round++) {
+        const roundSeed = `${seed}:${round}`;
+        const outcome = processor.process(roundSeed);
+        results.push({
+          round: round,
+          seed: roundSeed,
+          outcome,
+        });
+      }
     }
 
     setVerificationResult({
@@ -184,7 +192,7 @@ export function OutcomeVerifier() {
               name="serverSeedHash"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Server Seed Hash</FormLabel>
+                  <FormLabel>Server Seed (Hashed)</FormLabel>
                   <FormControl>
                     <Input placeholder="Enter server seed hash" {...field} />
                   </FormControl>
@@ -204,22 +212,24 @@ export function OutcomeVerifier() {
             {hashVerification && (
               <div>
                 <div className="flex items-center gap-2 mb-4">
-                  <h3 className="text-sm font-medium">Hash</h3>
+                  <h3 className="text-sm font-medium">Hash Verification</h3>
                   <Separator className="flex-1" />
                 </div>
                 <div className="text-xs font-mono space-y-1">
-                  <div className="flex gap-2">
-                    <span className="font-medium">Expected Hash:</span>
-                    <span>{hashVerification.expectedHash}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-muted-foreground">Expected:</span>
+                    <code>{hashVerification.expectedHash}</code>
                   </div>
-                  <div className="flex gap-2">
-                    <span className="font-medium">Received Hash:</span>
-                    <span>{hashVerification.receivedHash}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-muted-foreground">Received:</span>
+                    <code>{hashVerification.receivedHash}</code>
                   </div>
-                  <div className="flex gap-2">
-                    <span className="font-medium">Status:</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-muted-foreground">Status:</span>
                     <span
-                      className={hashVerification.expectedHash === hashVerification.receivedHash ? 'text-green-500' : 'text-red-500'}
+                      className={`font-medium ${
+                        hashVerification.expectedHash === hashVerification.receivedHash ? 'text-green-500' : 'text-red-500'
+                      }`}
                     >
                       {hashVerification.expectedHash === hashVerification.receivedHash ? 'Valid' : 'Invalid'}
                     </span>
@@ -253,22 +263,20 @@ export function OutcomeVerifier() {
                           <code className="text-xs text-muted-foreground font-mono">{round.seed}</code>
                         </div>
                         <div className="mt-2 space-y-1">
-                          <div className="text-xs text-muted-foreground space-y-1">
-                            <div className="flex gap-2">
-                              <span className="font-medium">Result:</span>
-                              <span>{round.outcome.result}</span>
+                          <div className="text-xs font-mono space-y-1">
+                            <div className="flex items-center gap-2">
+                              <span className="text-muted-foreground">Result:</span>
+                              <code>{round.outcome.result}</code>
                             </div>
-
-                            <div className="flex gap-2">
-                              <span className="font-medium">Value:</span>
-                              <span>{round.outcome.value}</span>
+                            <div className="flex items-center gap-2">
+                              <span className="text-muted-foreground">Value:</span>
+                              <code>{round.outcome.value}</code>
                             </div>
-
                             {round.outcome.metadata &&
                               Object.entries(round.outcome.metadata).map(([key, value]) => (
-                                <div key={key} className="flex gap-2">
-                                  <span className="font-medium">{key}:</span>
-                                  <span>{value}</span>
+                                <div key={key} className="flex items-center gap-2">
+                                  <span className="text-muted-foreground">{key}:</span>
+                                  <code>{value}</code>
                                 </div>
                               ))}
                           </div>
