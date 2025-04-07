@@ -9,13 +9,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/
 import { ScrollArea } from './ui/scroll-area';
 import { Separator } from './ui/separator';
 import { useState } from 'react';
-import { GameOutcome, getProcessor, processors } from '@/lib/games/processors';
+import { GameOutcome, getProcessor, processors } from '@/processors';
+import { getHashFrom } from '@/helpers/crypto';
 
 const MULTI_ROUND_GAMES = ['plinko'];
 
 const formSchema = z.object({
   clientSeed: z.string().min(1, 'Client seed is required'),
   serverSeed: z.string().min(1, 'Server seed is required'),
+  serverSeedHash: z.string().min(1, 'Server seed hash is required'),
   nonce: z.string().min(1, 'Nonce is required'),
   gamemode: z.string().min(1, 'Gamemode is required'),
   rounds: z.string().optional(),
@@ -35,12 +37,14 @@ type VerificationResult = {
 
 export function OutcomeVerifier() {
   const [verificationResult, setVerificationResult] = useState<VerificationResult>(null);
+  const [hashVerification, setHashVerification] = useState<{ expectedHash: string; receivedHash: string } | null>(null);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       clientSeed: '',
       serverSeed: '',
+      serverSeedHash: '',
       nonce: '',
       gamemode: '',
       rounds: '1',
@@ -50,7 +54,14 @@ export function OutcomeVerifier() {
   const selectedGame = form.watch('gamemode');
   const isMultiRoundGame = MULTI_ROUND_GAMES.includes(selectedGame);
 
-  function onSubmit(values: FormValues) {
+  async function onSubmit(values: FormValues) {
+    // Verify server seed hash
+    const expectedHash = await getHashFrom(values.serverSeed);
+    setHashVerification({
+      expectedHash,
+      receivedHash: values.serverSeedHash,
+    });
+
     const seed = `${values.serverSeed}:${values.clientSeed}:${values.nonce}`;
     const rounds = values.rounds ? parseInt(values.rounds) : 1;
     const processor = getProcessor(values.gamemode);
@@ -168,6 +179,20 @@ export function OutcomeVerifier() {
               />
             </div>
 
+            <FormField
+              control={form.control}
+              name="serverSeedHash"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Server Seed Hash</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter server seed hash" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
             <Button type="submit" className="w-full">
               Verify
             </Button>
@@ -176,13 +201,40 @@ export function OutcomeVerifier() {
 
         {verificationResult && (
           <div className="space-y-6">
+            {hashVerification && (
+              <div>
+                <div className="flex items-center gap-2 mb-4">
+                  <h3 className="text-sm font-medium">Hash</h3>
+                  <Separator className="flex-1" />
+                </div>
+                <div className="text-xs font-mono space-y-1">
+                  <div className="flex gap-2">
+                    <span className="font-medium">Expected Hash:</span>
+                    <span>{hashVerification.expectedHash}</span>
+                  </div>
+                  <div className="flex gap-2">
+                    <span className="font-medium">Received Hash:</span>
+                    <span>{hashVerification.receivedHash}</span>
+                  </div>
+                  <div className="flex gap-2">
+                    <span className="font-medium">Status:</span>
+                    <span
+                      className={hashVerification.expectedHash === hashVerification.receivedHash ? 'text-green-500' : 'text-red-500'}
+                    >
+                      {hashVerification.expectedHash === hashVerification.receivedHash ? 'Valid' : 'Invalid'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <div>
               <div className="flex items-center gap-2 mb-4">
                 <h3 className="text-sm font-medium">Outcome</h3>
                 <Separator className="flex-1" />
               </div>
               <div className="text-xs font-mono space-y-1">
-                {verificationResult.results.map((round) => round.outcome.value).join(' ')}
+                {verificationResult.results.map((round) => round.outcome.result).join(' ')}
               </div>
             </div>
 
@@ -200,18 +252,26 @@ export function OutcomeVerifier() {
                           <span className="font-medium">Round {round.round}</span>
                           <code className="text-xs text-muted-foreground font-mono">{round.seed}</code>
                         </div>
-                        <div className="text-sm">{round.outcome.value}</div>
                         <div className="mt-2 space-y-1">
-                          {round.outcome.metadata && (
-                            <div className="text-xs text-muted-foreground space-y-1">
-                              {Object.entries(round.outcome.metadata).map(([key, value]) => (
+                          <div className="text-xs text-muted-foreground space-y-1">
+                            <div className="flex gap-2">
+                              <span className="font-medium">Result:</span>
+                              <span>{round.outcome.result}</span>
+                            </div>
+
+                            <div className="flex gap-2">
+                              <span className="font-medium">Value:</span>
+                              <span>{round.outcome.value}</span>
+                            </div>
+
+                            {round.outcome.metadata &&
+                              Object.entries(round.outcome.metadata).map(([key, value]) => (
                                 <div key={key} className="flex gap-2">
                                   <span className="font-medium">{key}:</span>
                                   <span>{value}</span>
                                 </div>
                               ))}
-                            </div>
-                          )}
+                          </div>
                         </div>
                       </div>
                     ))}

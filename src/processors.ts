@@ -1,5 +1,8 @@
+import { plinko } from "./games/plinko";
+
 export type GameOutcome = {
-  value: number | string;
+  value: number;
+  result: string;
   metadata?: Record<string, string | number | boolean | null>;
 };
 
@@ -8,18 +11,7 @@ export type GameProcessor = {
 }
 
 export const processors: Record<string, GameProcessor> = {
-  plinko: {
-    process: (seed: string) => {
-      return {
-        value: 'L',
-        metadata: {
-          rank: 1,
-          suit: 'clubs',
-          player: 'Dealer'
-        }
-      };
-    },
-  }
+  plinko: plinko
 };
 
 export const getProcessor = (gameName: string) => {

@@ -2,7 +2,7 @@ import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { ScrollArea } from './ui/scroll-area';
 import { Alert, AlertDescription, AlertTitle } from './ui/alert';
 import { CheckCircle2 } from 'lucide-react';
-import { GameOutcome } from '@/lib/games/processors';
+import { GameOutcome } from '@/processors';
 
 export type RoundResult = {
   roundNumber: number;
