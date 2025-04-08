@@ -9,52 +9,55 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/
 import { ScrollArea } from './ui/scroll-area';
 import { Separator } from './ui/separator';
 import { useState } from 'react';
-import { GameOutcome, getProcessor, processors } from '@/processors';
+import { GameOutcome, games, GameMode } from '@/processors';
 import { getHashFrom } from '@/helpers/crypto';
+import { baseSchema } from './baseSchema';
+import { mines } from '@/games/mines';
+import { blackjack } from '@/games/blackjack';
+import { roulette } from '@/games/roulette';
+import { dice } from '@/games/dice';
+import { plinko } from '@/games/plinko';
 
-const MULTI_ROUND_GAMES = ['plinko', 'blackjack'];
-
-const formSchema = z.object({
-  clientSeed: z.string().min(1, 'Client seed is required'),
-  serverSeed: z.string().min(1, 'Server seed is required'),
-  serverSeedHash: z.string().min(1, 'Server seed hash is required'),
-  nonce: z.string().min(1, 'Nonce is required'),
-  gamemode: z.string().min(1, 'Gamemode is required'),
-  rounds: z.string().optional(),
-});
-
-type FormValues = z.infer<typeof formSchema>;
-
-type RoundResult = {
-  round: number;
-  seed: string;
-  outcome: GameOutcome;
+const createSchema = () => {
+  return z.discriminatedUnion('gamemode', [
+    baseSchema.extend({
+      gamemode: z.literal('plinko'),
+      options: plinko.schema,
+    }),
+    baseSchema.extend({
+      gamemode: z.literal('mines'),
+      options: mines.schema,
+    }),
+    baseSchema.extend({
+      gamemode: z.literal('blackjack'),
+      options: blackjack.schema,
+    }),
+    baseSchema.extend({
+      gamemode: z.literal('roulette'),
+      options: roulette.schema,
+    }),
+    baseSchema.extend({
+      gamemode: z.literal('dice'),
+      options: dice.schema,
+    }),
+  ]);
 };
 
-type VerificationResult = {
-  results: RoundResult[];
-} | null;
+const schema = createSchema();
+
+type Schema = z.infer<typeof schema>;
 
 export function OutcomeVerifier() {
-  const [verificationResult, setVerificationResult] = useState<VerificationResult>(null);
+  const [verificationResult, setVerificationResult] = useState<GameOutcome | null>(null);
   const [hashVerification, setHashVerification] = useState<{ expectedHash: string; receivedHash: string } | null>(null);
 
-  const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      clientSeed: '',
-      serverSeed: '',
-      serverSeedHash: '',
-      nonce: '',
-      gamemode: '',
-      rounds: '1',
-    },
+  const form = useForm<Schema>({
+    resolver: zodResolver(schema),
   });
 
-  const selectedGame = form.watch('gamemode');
-  const isMultiRoundGame = MULTI_ROUND_GAMES.includes(selectedGame);
+  const selectedGame = form.watch('gamemode') as GameMode;
 
-  async function onSubmit(values: FormValues) {
+  async function onSubmit(values: Schema) {
     // Verify server seed hash
     const expectedHash = await getHashFrom(values.serverSeed);
     setHashVerification({
@@ -63,32 +66,9 @@ export function OutcomeVerifier() {
     });
 
     const seed = `${values.serverSeed}:${values.clientSeed}:${values.nonce}`;
-    const rounds = values.rounds ? parseInt(values.rounds) : 1;
-    const processor = getProcessor(values.gamemode);
+    const game = games[values.gamemode];
 
-    const results: RoundResult[] = [];
-    if (!isMultiRoundGame) {
-      const outcome = processor.process(seed);
-      results.push({
-        round: 1,
-        seed: seed,
-        outcome,
-      });
-    } else {
-      for (let round = 1; round <= rounds; round++) {
-        const roundSeed = `${seed}:${round}`;
-        const outcome = processor.process(roundSeed);
-        results.push({
-          round: round,
-          seed: roundSeed,
-          outcome,
-        });
-      }
-    }
-
-    setVerificationResult({
-      results: results,
-    });
+    setVerificationResult(game.process(seed, values.options as never));
   }
 
   return (
@@ -114,7 +94,7 @@ export function OutcomeVerifier() {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {Object.keys(processors).map((game) => (
+                        {Object.keys(games).map((game) => (
                           <SelectItem key={game} value={game}>
                             {game}
                           </SelectItem>
@@ -125,23 +105,55 @@ export function OutcomeVerifier() {
                   </FormItem>
                 )}
               />
+            </div>
 
-              {isMultiRoundGame && (
+            {/* Game-specific options */}
+            {selectedGame === 'mines' && (
+              <div className="grid grid-cols-2 gap-4">
                 <FormField
                   control={form.control}
-                  name="rounds"
+                  name="options.size"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Rounds</FormLabel>
+                      <FormLabel>Grid Size</FormLabel>
                       <FormControl>
-                        <Input type="number" min="1" placeholder="Enter number of rounds" {...field} />
+                        <Input type="number" min="3" max="10" {...field} onChange={(e) => field.onChange(Number(e.target.value))} />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-              )}
-            </div>
+                <FormField
+                  control={form.control}
+                  name="options.mines"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Number of Mines</FormLabel>
+                      <FormControl>
+                        <Input type="number" min="1" max="25" {...field} onChange={(e) => field.onChange(Number(e.target.value))} />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              </div>
+            )}
+
+            {selectedGame === 'plinko' && (
+              <FormField
+                control={form.control}
+                name="options.rows"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Number of Rows</FormLabel>
+                    <FormControl>
+                      <Input type="number" min="1" max="10" {...field} onChange={(e) => field.onChange(Number(e.target.value))} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
 
             <div className="grid grid-cols-3 gap-2">
               <FormField
@@ -243,37 +255,35 @@ export function OutcomeVerifier() {
                 <h3 className="text-sm font-medium">Outcome</h3>
                 <Separator className="flex-1" />
               </div>
+
+              {/* todo: render */}
               <div className="text-xs font-mono space-y-1">
-                {verificationResult.results.map((round) => round.outcome.result).join(', ')}
+                {verificationResult.result} {verificationResult.raw}
               </div>
             </div>
 
-            {verificationResult.results && verificationResult.results.length > 0 && (
+            {verificationResult.steps && verificationResult.steps.length > 0 && (
               <div>
                 <div className="flex items-center gap-2 mb-4">
-                  <h3 className="text-sm font-medium">Calculations</h3>
+                  <h3 className="text-sm font-medium">Steps</h3>
                   <Separator className="flex-1" />
                 </div>
                 <ScrollArea className="h-[300px]">
                   <div className="space-y-2 pr-4">
-                    {verificationResult.results.map((round) => (
-                      <div key={round.round} className="text-sm p-3 border rounded-lg bg-muted/5">
+                    {verificationResult.steps.map((step, index) => (
+                      <div key={index} className="text-sm p-3 border rounded-lg bg-muted/5">
                         <div className="flex items-center justify-between">
-                          <span className="font-medium">Round {round.round}</span>
-                          <code className="text-xs text-muted-foreground font-mono">{round.seed}</code>
+                          <span className="font-medium">Step {index + 1}</span>
+                          {step.seed && <code className="text-xs text-muted-foreground font-mono">{step.seed}</code>}
                         </div>
                         <div className="mt-2 space-y-1">
                           <div className="text-xs font-mono space-y-1">
                             <div className="flex items-center gap-2">
-                              <span className="text-muted-foreground">Result:</span>
-                              <code>{round.outcome.result}</code>
+                              <span className="text-muted-foreground">raw:</span>
+                              <code>{step.raw}</code>
                             </div>
-                            <div className="flex items-center gap-2">
-                              <span className="text-muted-foreground">Value:</span>
-                              <code>{round.outcome.value}</code>
-                            </div>
-                            {round.outcome.metadata &&
-                              Object.entries(round.outcome.metadata).map(([key, value]) => (
+                            {step.metadata &&
+                              Object.entries(step.metadata).map(([key, value]) => (
                                 <div key={key} className="flex items-center gap-2">
                                   <span className="text-muted-foreground">{key}:</span>
                                   <code>{value}</code>
@@ -293,40 +303,3 @@ export function OutcomeVerifier() {
     </Card>
   );
 }
-
-// const baseSeed = `${values.serverSeed}:${values.clientSeed}:${values.nonce}`;
-// // const processor = getOutcomeProcessor(values.gamemode);
-
-// // if (isMultiRoundGame && values.rounds) {
-// //   const numRounds = parseInt(values.rounds);
-// //   const roundResults: RoundResult[] = [];
-
-// //   for (let i = 0; i < numRounds; i++) {
-// //     const roundSeed = `${baseSeed}:${i + 1}`;
-// //     const outcome = processor.process(roundSeed);
-
-// //     roundResults.push({
-// //       roundNumber: i + 1,
-// //       seed: roundSeed,
-// //       outcome,
-// //     });
-// //   }
-
-// //   setVerificationResult({
-// //     gameName: values.gamemode,
-// //     clientSeed: values.clientSeed,
-// //     serverSeed: values.serverSeed,
-// //     nonce: values.nonce,
-// //     finalOutcome: roundResults[roundResults.length - 1].outcome,
-// //     rounds: roundResults,
-// //   });
-// // } else {
-// //   const outcome = processRound(values.gamemode, baseSeed);
-// //   setVerificationResult({
-// //     gameName: values.gamemode,
-// //     clientSeed: values.clientSeed,
-// //     serverSeed: values.serverSeed,
-// //     nonce: values.nonce,
-// //     finalOutcome: outcome,
-// //   });
-// // }

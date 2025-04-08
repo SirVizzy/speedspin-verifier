@@ -1,13 +1,21 @@
-import { GameProcessor } from '@/processors';
+import { Game, GameOutcomeStep } from "@/processors";
+import { z } from "zod";
 import seedrandom from 'seedrandom';
 
-export const roulette: GameProcessor = {
-  process: (seed: string) => {
-    const value = seedrandom(seed)();
-    const number = Math.floor(value * 36);
+export const roulette: Game = {
+  id: 'roulette',
+  schema: z.object({}),
+  process: (seed) => {
+    const rng = seedrandom(seed);
+    const value = rng();
+    const number = Math.floor(value * 37); // 0-36 for European roulette
+
     return {
       result: number.toString(),
       value: value,
+      metadata: {
+        number,
+      },
     };
   },
 };

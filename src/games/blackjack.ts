@@ -1,12 +1,14 @@
-import { GameProcessor } from "@/processors";
+import { Game } from "@/processors";
+import { z } from "zod";
 import seedrandom from "seedrandom";
 
 const RANKS = [2, 3, 4, 5, 6, 7, 8, 9, 10, "J", "Q", "K", "A"];
 const SUITS = ["(Clubs)", "(Diamonds)", "(Hearts)", "(Spades)"];
 
-export const blackjack: GameProcessor = {
-  process: (seed: string) => {
-
+export const blackjack: Game = {
+  id: 'blackjack',
+  schema: z.object({}),
+  process: (seed) => {
     const value = seedrandom(seed)();
     const id = Math.round(value * 51)
 
@@ -23,8 +25,3 @@ export const blackjack: GameProcessor = {
     }
   }
 }
-
-// given seed = 91f225a82e80b438f0cee65f:placeholder:1000
-// client seed = placeholder
-// nonce = 1000
-// server seed = 91f225a82e80b438f0cee65f

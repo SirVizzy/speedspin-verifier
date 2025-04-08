@@ -1,30 +1,36 @@
+import { z } from "zod";
 import { blackjack } from "./games/blackjack";
 import { dice } from "./games/dice";
+import { mines } from "./games/mines";
 import { plinko } from "./games/plinko";
 import { roulette } from "./games/roulette";
 
 export type GameOutcome = {
-  value: number;
   result: string;
+  seed: string;
+  raw?: number;
+  steps?: GameOutcomeStep[];
   metadata?: Record<string, string | number | boolean | null>;
 };
 
-export type GameProcessor = {
-  process: (seed: string) => GameOutcome;
-}
-
-export const processors: Record<string, GameProcessor> = {
-  plinko: plinko,
-  dice: dice,
-  blackjack: blackjack,
-  roulette: roulette
+export type GameOutcomeStep = {
+  seed?: string; // <-- seed for this step (default to server seed)
+  raw: number; // <-- raw number from the rng
+  metadata?: Record<string, string | number | boolean | null>;
 };
 
-export const getProcessor = (gameName: string) => {
+export type GameMode = 'plinko' | 'dice' | 'blackjack' | 'roulette' | 'mines';
 
-  if (!processors[gameName]) {
-    throw new Error(`Unable to find processor for game: ${gameName} - please report this issue.`);
-  }
-
-  return processors[gameName];
+export type Game<TOptions = unknown> = {
+  id: GameMode;
+  schema: z.ZodSchema<TOptions>;
+  process: (seed: string, options: TOptions) => GameOutcome;
 }
+
+export const games = {
+  plinko,
+  dice,
+  blackjack,
+  roulette,
+  mines,
+} as const;
