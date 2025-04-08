@@ -21,10 +21,12 @@ export type GameOutcomeStep = {
 
 export type GameMode = 'plinko' | 'dice' | 'blackjack' | 'roulette' | 'mines';
 
-export type Game<TOptions = unknown> = {
+export type Game<TOptions = undefined> = {
   id: GameMode;
-  schema: z.ZodSchema<TOptions>;
-  process: (seed: string, options: TOptions) => GameOutcome;
+  schema: TOptions extends undefined ? z.ZodSchema<object> : z.ZodSchema<TOptions>;
+  process: TOptions extends undefined 
+    ? (seed: string) => GameOutcome 
+    : (seed: string, options: TOptions) => GameOutcome;
 }
 
 export const games = {

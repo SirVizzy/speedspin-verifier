@@ -1,4 +1,4 @@
-import { Game, GameOutcomeStep } from "@/processors";
+import { Game } from "@/processors";
 import { z } from "zod";
 import seedrandom from 'seedrandom';
 
@@ -11,11 +11,9 @@ export const roulette: Game = {
     const number = Math.floor(value * 37); // 0-36 for European roulette
 
     return {
+      seed: seed,
       result: number.toString(),
-      value: value,
-      metadata: {
-        number,
-      },
+      raw: value,
     };
   },
 };

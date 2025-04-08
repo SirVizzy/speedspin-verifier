@@ -1,27 +1,41 @@
-import { Game } from "@/processors";
-import { z } from "zod";
-import seedrandom from "seedrandom";
+import { Game, GameOutcomeStep } from '@/processors';
+import { z } from 'zod';
+import seedrandom from 'seedrandom';
 
-const RANKS = [2, 3, 4, 5, 6, 7, 8, 9, 10, "J", "Q", "K", "A"];
-const SUITS = ["(Clubs)", "(Diamonds)", "(Hearts)", "(Spades)"];
+const RANKS = [2, 3, 4, 5, 6, 7, 8, 9, 10, 'J', 'Q', 'K', 'A'];
+const SUITS = ['(Clubs)', '(Diamonds)', '(Hearts)', '(Spades)'];
 
-export const blackjack: Game = {
+type BlackjackOptions = {
+  cards: number;
+};
+
+export const blackjack: Game<BlackjackOptions> = {
   id: 'blackjack',
-  schema: z.object({}),
-  process: (seed) => {
-    const value = seedrandom(seed)();
-    const id = Math.round(value * 51)
+  schema: z.object({
+    cards: z.number().min(1),
+  }),
+  process: (seed, options) => {
+    const steps: GameOutcomeStep[] = [];
 
-    const card = [
-      RANKS[id % RANKS.length],
-      SUITS[Math.floor(id / RANKS.length)]
-    ]
+    for (let i = 1; i <= options.cards; i++) {
+      const roundSeed = `${seed}:${i}`;
+      const raw = seedrandom(roundSeed)();
+      const id = Math.round(raw * 51);
+      const card = [RANKS[id % RANKS.length], SUITS[Math.floor(id / RANKS.length)]];
 
-    const result = card.join(' ')
+      steps.push({
+        seed: roundSeed,
+        raw: raw,
+        metadata: {
+          card: card.join(' '),
+        },
+      });
+    }
 
     return {
-      result: result.toString(),
-      value: value,
-    }
-  }
-}
+      seed: seed,
+      steps: steps,
+      result: steps.map((step) => step.metadata?.card).join(', '),
+    };
+  },
+};
