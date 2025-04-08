@@ -1,3 +1,4 @@
+import { blackjack } from "./games/blackjack";
 import { dice } from "./games/dice";
 import { plinko } from "./games/plinko";
 
@@ -13,7 +14,8 @@ export type GameProcessor = {
 
 export const processors: Record<string, GameProcessor> = {
   plinko: plinko,
-  dice: dice
+  dice: dice,
+  blackjack: blackjack
 };
 
 export const getProcessor = (gameName: string) => {

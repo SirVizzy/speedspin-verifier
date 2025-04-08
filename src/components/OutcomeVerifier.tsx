@@ -12,7 +12,7 @@ import { useState } from 'react';
 import { GameOutcome, getProcessor, processors } from '@/processors';
 import { getHashFrom } from '@/helpers/crypto';
 
-const MULTI_ROUND_GAMES = ['plinko'];
+const MULTI_ROUND_GAMES = ['plinko', 'blackjack'];
 
 const formSchema = z.object({
   clientSeed: z.string().min(1, 'Client seed is required'),
@@ -67,7 +67,7 @@ export function OutcomeVerifier() {
     const processor = getProcessor(values.gamemode);
 
     const results: RoundResult[] = [];
-    if (rounds === 1) {
+    if (!isMultiRoundGame) {
       const outcome = processor.process(seed);
       results.push({
         round: 1,
@@ -244,7 +244,7 @@ export function OutcomeVerifier() {
                 <Separator className="flex-1" />
               </div>
               <div className="text-xs font-mono space-y-1">
-                {verificationResult.results.map((round) => round.outcome.result).join(' ')}
+                {verificationResult.results.map((round) => round.outcome.result).join(', ')}
               </div>
             </div>
 
