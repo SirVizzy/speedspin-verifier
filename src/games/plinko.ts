@@ -20,6 +20,7 @@ export const plinko: Game<PlinkoOptions> = {
       const direction = raw < 0.5 ? 'L' : 'R';
 
       steps.push({
+        title: 'Row',
         seed: roundSeed,
         raw: raw,
         metadata: {

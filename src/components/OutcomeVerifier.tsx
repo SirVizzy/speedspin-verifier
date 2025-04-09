@@ -155,6 +155,22 @@ export function OutcomeVerifier() {
               />
             )}
 
+            {selectedGame === 'blackjack' && (
+              <FormField
+                control={form.control}
+                name="options.cards"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Number of Cards</FormLabel>
+                    <FormControl>
+                      <Input type="number" min="1" max="10" {...field} onChange={(e) => field.onChange(Number(e.target.value))} />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
+            )}
+
             <div className="grid grid-cols-3 gap-2">
               <FormField
                 control={form.control}
@@ -273,7 +289,9 @@ export function OutcomeVerifier() {
                     {verificationResult.steps.map((step, index) => (
                       <div key={index} className="text-sm p-3 border rounded-lg bg-muted/5">
                         <div className="flex items-center justify-between">
-                          <span className="font-medium">Step {index + 1}</span>
+                          <span className="font-medium">
+                            {step.title} {index + 1}
+                          </span>
                           {step.seed && <code className="text-xs text-muted-foreground font-mono">{step.seed}</code>}
                         </div>
                         <div className="mt-2 space-y-1">

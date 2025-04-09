@@ -40,7 +40,8 @@ export const mines: Game<MinesOptions> = {
       const y = Math.floor(tileIdx / size);
 
       steps.push({
-        seed,
+        title: 'Mine',
+        seed: seed,
         raw: value,
         metadata: {
           x,

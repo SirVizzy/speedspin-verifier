@@ -24,6 +24,7 @@ export const blackjack: Game<BlackjackOptions> = {
       const card = [RANKS[id % RANKS.length], SUITS[Math.floor(id / RANKS.length)]];
 
       steps.push({
+        title: 'Card',
         seed: roundSeed,
         raw: raw,
         metadata: {

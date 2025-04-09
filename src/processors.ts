@@ -14,8 +14,9 @@ export type GameOutcome = {
 };
 
 export type GameOutcomeStep = {
-  seed?: string; // <-- seed for this step (default to server seed)
-  raw: number; // <-- raw number from the rng
+  title: string;
+  raw: number;
+  seed?: string; 
   metadata?: Record<string, string | number | boolean | null>;
 };
 
