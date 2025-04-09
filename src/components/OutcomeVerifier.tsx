@@ -17,7 +17,7 @@ export function OutcomeVerifier() {
           that the outcome has not been tampered with.
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-6">
+      <CardContent className="space-y-4">
         <OutcomeVerifierForm onVerificationChange={setVerificationResult} />
         {verificationResult && <OutcomeVerifierResult verificationResult={verificationResult} />}
         <div className="flex justify-center">
