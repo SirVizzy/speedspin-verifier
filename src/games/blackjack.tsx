@@ -1,4 +1,4 @@
-import { Game, GameOutcomeStep } from '@/processors';
+import { Game, GameOutcomeStep } from '@/types';
 import { z } from 'zod';
 import seedrandom from 'seedrandom';
 

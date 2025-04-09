@@ -1,9 +1,12 @@
+import { ReactNode } from "react";
 import { z } from "zod";
-import { blackjack } from "./games/blackjack";
-import { dice } from "./games/dice";
-import { mines } from "./games/mines";
-import { plinko } from "./games/plinko";
-import { roulette } from "./games/roulette";
+
+export type VerificationResult = {
+  node: ReactNode;
+  expectedHash: string;
+  receivedHash: string;
+  result: GameOutcome;
+};
 
 export type GameOutcome<TResult = string> = {
   result: TResult;
@@ -16,7 +19,7 @@ export type GameOutcome<TResult = string> = {
 export type GameOutcomeStep = {
   title: string;
   raw: number;
-  seed?: string; 
+  seed?: string;
   metadata?: Record<string, string | number | boolean | null>;
 };
 
@@ -27,12 +30,5 @@ export type Game<TOptions = undefined, TResult = string> = {
   schema: z.ZodSchema<TOptions>;
   process: (seed: string, options: TOptions) => GameOutcome<TResult>;
   render: (outcome: GameOutcome<TResult>) => React.ReactNode;
-}
+};
 
-export const games = {
-  plinko,
-  dice,
-  blackjack,
-  roulette,
-  mines,
-} as const;
