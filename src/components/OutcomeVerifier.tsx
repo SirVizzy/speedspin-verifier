@@ -9,7 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/
 import { ScrollArea } from './ui/scroll-area';
 import { Separator } from './ui/separator';
 import { ReactNode, useState } from 'react';
-import { GameOutcome, games, GameMode } from '@/processors';
+import { games, GameMode, GameOutcome } from '@/processors';
 import { getHashFrom } from '@/helpers/crypto';
 import { baseSchema } from './baseSchema';
 import { mines } from '@/games/mines';
@@ -47,10 +47,15 @@ const schema = createSchema();
 
 type Schema = z.infer<typeof schema>;
 
+type VerificationResult = {
+  node: ReactNode;
+  expectedHash: string;
+  receivedHash: string;
+  result: GameOutcome;
+};
+
 export function OutcomeVerifier() {
-  const [result, setResult] = useState<ReactNode>(null);
-  const [verificationResult, setVerificationResult] = useState<GameOutcome | null>(null);
-  const [hashVerification, setHashVerification] = useState<{ expectedHash: string; receivedHash: string } | null>(null);
+  const [verificationResult, setVerificationResult] = useState<VerificationResult | null>(null);
 
   const form = useForm<Schema>({
     resolver: zodResolver(schema),
@@ -59,18 +64,18 @@ export function OutcomeVerifier() {
   const selectedGame = form.watch('gamemode') as GameMode;
 
   async function onSubmit(values: Schema) {
-    // Verify server seed hash
-    const expectedHash = await getHashFrom(values.serverSeed);
-    setHashVerification({
-      expectedHash,
-      receivedHash: values.serverSeedHash,
-    });
-
     const seed = `${values.serverSeed}:${values.clientSeed}:${values.nonce}`;
+    const expectedHash = await getHashFrom(values.serverSeed);
+
     const game = games[values.gamemode];
-    const processedResult = game.process(seed, values.options as never);
-    setVerificationResult(processedResult);
-    setResult(game.render(processedResult));
+    const result = game.process(seed, values.options as never) as GameOutcome;
+
+    setVerificationResult({
+      node: game.render(result as never),
+      expectedHash: expectedHash,
+      receivedHash: values.serverSeedHash,
+      result: result,
+    });
   }
 
   return (
@@ -237,36 +242,34 @@ export function OutcomeVerifier() {
           </form>
         </Form>
 
-        {verificationResult && result && (
+        {verificationResult && (
           <div className="space-y-6">
-            {hashVerification && (
-              <div>
-                <div className="flex items-center gap-2 mb-4">
-                  <h3 className="text-sm font-medium">Hash Verification</h3>
-                  <Separator className="flex-1" />
+            <div>
+              <div className="flex items-center gap-2 mb-4">
+                <h3 className="text-sm font-medium">Hash Verification</h3>
+                <Separator className="flex-1" />
+              </div>
+              <div className="text-xs font-mono space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-muted-foreground">Expected:</span>
+                  <code>{verificationResult.expectedHash}</code>
                 </div>
-                <div className="text-xs font-mono space-y-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-muted-foreground">Expected:</span>
-                    <code>{hashVerification.expectedHash}</code>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-muted-foreground">Received:</span>
-                    <code>{hashVerification.receivedHash}</code>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <span className="text-muted-foreground">Status:</span>
-                    <span
-                      className={`font-medium ${
-                        hashVerification.expectedHash === hashVerification.receivedHash ? 'text-green-500' : 'text-red-500'
-                      }`}
-                    >
-                      {hashVerification.expectedHash === hashVerification.receivedHash ? 'Valid' : 'Invalid'}
-                    </span>
-                  </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-muted-foreground">Received:</span>
+                  <code>{verificationResult.receivedHash}</code>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-muted-foreground">Status:</span>
+                  <span
+                    className={`font-medium ${
+                      verificationResult.expectedHash === verificationResult.receivedHash ? 'text-green-500' : 'text-red-500'
+                    }`}
+                  >
+                    {verificationResult.expectedHash === verificationResult.receivedHash ? 'Valid' : 'Invalid'}
+                  </span>
                 </div>
               </div>
-            )}
+            </div>
 
             <div>
               <div className="flex items-center gap-2 mb-4">
@@ -275,10 +278,10 @@ export function OutcomeVerifier() {
               </div>
 
               {/* todo: render */}
-              <div className="text-xs font-mono space-y-1">{result}</div>
+              <div className="text-xs font-mono space-y-1">{verificationResult.node}</div>
             </div>
 
-            {verificationResult.steps && verificationResult.steps.length > 0 && (
+            {verificationResult.result.steps && verificationResult.result.steps.length > 0 && (
               <div>
                 <div className="flex items-center gap-2 mb-4">
                   <h3 className="text-sm font-medium">Steps</h3>
@@ -286,7 +289,7 @@ export function OutcomeVerifier() {
                 </div>
                 <ScrollArea className="h-[300px]">
                   <div className="space-y-2 pr-4">
-                    {verificationResult.steps.map((step, index) => (
+                    {verificationResult.result.steps.map((step, index) => (
                       <div key={index} className="text-sm p-3 border rounded-lg bg-muted/5">
                         <div className="flex items-center justify-between">
                           <span className="font-medium">

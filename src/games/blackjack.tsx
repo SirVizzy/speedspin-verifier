@@ -5,7 +5,7 @@ import seedrandom from 'seedrandom';
 const RANKS = [2, 3, 4, 5, 6, 7, 8, 9, 10, 'J', 'Q', 'K', 'A'];
 const SUITS = ['(Clubs)', '(Diamonds)', '(Hearts)', '(Spades)'];
 
-type BlackjackOptions = {
+export type BlackjackOptions = {
   cards: number;
 };
 
