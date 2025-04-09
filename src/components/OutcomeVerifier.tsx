@@ -19,7 +19,6 @@ export function OutcomeVerifier() {
       </CardHeader>
       <CardContent className="space-y-4">
         <OutcomeVerifierForm onVerificationChange={setVerificationResult} />
-        {verificationResult && <OutcomeVerifierResult verificationResult={verificationResult} />}
         <div className="flex justify-center">
           <a
             href="https://github.com/SirVizzy/speedspin-verifier"
@@ -31,6 +30,7 @@ export function OutcomeVerifier() {
             <span className="text-sm">View on GitHub</span>
           </a>
         </div>
+        {verificationResult && <OutcomeVerifierResult verificationResult={verificationResult} />}
       </CardContent>
     </Card>
   );
