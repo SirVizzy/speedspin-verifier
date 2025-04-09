@@ -14,6 +14,7 @@ import { roulette } from '@/games/roulette';
 import { dice } from '@/games/dice';
 import { plinko } from '@/games/plinko';
 import { VerificationResult } from '@/types';
+import { getSearchParam } from '@/helpers/search';
 
 const base = z.object({
   clientSeed: z.string().min(1, 'Client seed is required'),
@@ -49,9 +50,19 @@ const createSchema = () => {
 
 const schema = createSchema();
 
+export type Schema = z.infer<typeof schema>;
+export type SchemaKeys = keyof Schema;
+
 export const OutcomeVerifierForm = ({ onVerificationChange }: Props) => {
   const form = useForm<z.infer<typeof schema>>({
     resolver: zodResolver(schema),
+    defaultValues: {
+      clientSeed: getSearchParam('clientSeed'),
+      serverSeed: getSearchParam('serverSeed'),
+      serverSeedHash: getSearchParam('serverSeedHash'),
+      nonce: getSearchParam('nonce'),
+      gamemode: getSearchParam('gamemode') as GameMode,
+    },
   });
 
   const selectedGame = form.watch('gamemode') as GameMode;
@@ -68,6 +79,18 @@ export const OutcomeVerifierForm = ({ onVerificationChange }: Props) => {
       receivedHash: values.serverSeedHash,
       result: result,
     });
+
+    const synchronizeParams = () => {
+      const params = new URLSearchParams();
+      params.set('clientSeed', values.clientSeed);
+      params.set('serverSeed', values.serverSeed);
+      params.set('serverSeedHash', values.serverSeedHash);
+      params.set('nonce', values.nonce);
+      params.set('gamemode', values.gamemode);
+      window.history.replaceState({}, '', `?${params.toString()}`);
+    };
+
+    synchronizeParams();
   }
 
   return (
