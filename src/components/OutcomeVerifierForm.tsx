@@ -105,11 +105,11 @@ export const OutcomeVerifierForm = ({ onVerificationChange }: Props) => {
                 <FormLabel>Gamemode</FormLabel>
                 <Select onValueChange={field.onChange} defaultValue={field.value}>
                   <FormControl>
-                    <SelectTrigger className="w-full capitalize">
+                    <SelectTrigger className="w-full">
                       <SelectValue placeholder="Select a gamemode" />
                     </SelectTrigger>
                   </FormControl>
-                  <SelectContent className="capitalize">
+                  <SelectContent>
                     {Object.keys(games).map((game) => (
                       <SelectItem key={game} value={game}>
                         {game}
