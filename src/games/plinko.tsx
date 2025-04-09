@@ -35,4 +35,5 @@ export const plinko: Game<PlinkoOptions> = {
       result: steps.map((step) => step.metadata?.direction).join(''),
     };
   },
+  render: (outcome) => outcome.result,
 };

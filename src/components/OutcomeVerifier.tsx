@@ -8,7 +8,7 @@ import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from './ui/card';
 import { ScrollArea } from './ui/scroll-area';
 import { Separator } from './ui/separator';
-import { useState } from 'react';
+import { ReactNode, useState } from 'react';
 import { GameOutcome, games, GameMode } from '@/processors';
 import { getHashFrom } from '@/helpers/crypto';
 import { baseSchema } from './baseSchema';
@@ -48,6 +48,7 @@ const schema = createSchema();
 type Schema = z.infer<typeof schema>;
 
 export function OutcomeVerifier() {
+  const [result, setResult] = useState<ReactNode>(null);
   const [verificationResult, setVerificationResult] = useState<GameOutcome | null>(null);
   const [hashVerification, setHashVerification] = useState<{ expectedHash: string; receivedHash: string } | null>(null);
 
@@ -67,8 +68,9 @@ export function OutcomeVerifier() {
 
     const seed = `${values.serverSeed}:${values.clientSeed}:${values.nonce}`;
     const game = games[values.gamemode];
-
-    setVerificationResult(game.process(seed, values.options as never));
+    const processedResult = game.process(seed, values.options as never);
+    setVerificationResult(processedResult);
+    setResult(game.render(processedResult));
   }
 
   return (
@@ -235,7 +237,7 @@ export function OutcomeVerifier() {
           </form>
         </Form>
 
-        {verificationResult && (
+        {verificationResult && result && (
           <div className="space-y-6">
             {hashVerification && (
               <div>
@@ -273,9 +275,7 @@ export function OutcomeVerifier() {
               </div>
 
               {/* todo: render */}
-              <div className="text-xs font-mono space-y-1">
-                {verificationResult.result} {verificationResult.raw}
-              </div>
+              <div className="text-xs font-mono space-y-1">{result}</div>
             </div>
 
             {verificationResult.steps && verificationResult.steps.length > 0 && (

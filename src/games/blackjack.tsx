@@ -39,4 +39,5 @@ export const blackjack: Game<BlackjackOptions> = {
       result: steps.map((step) => step.metadata?.card).join(', '),
     };
   },
+  render: (outcome) => outcome.result,
 };

@@ -5,8 +5,8 @@ import { mines } from "./games/mines";
 import { plinko } from "./games/plinko";
 import { roulette } from "./games/roulette";
 
-export type GameOutcome = {
-  result: string;
+export type GameOutcome<TResult = string> = {
+  result: TResult;
   seed: string;
   raw?: number;
   steps?: GameOutcomeStep[];
@@ -22,12 +22,13 @@ export type GameOutcomeStep = {
 
 export type GameMode = 'plinko' | 'dice' | 'blackjack' | 'roulette' | 'mines';
 
-export type Game<TOptions = undefined> = {
+export type Game<TOptions = undefined, TResult = string> = {
   id: GameMode;
   schema: TOptions extends undefined ? z.ZodSchema<object> : z.ZodSchema<TOptions>;
   process: TOptions extends undefined 
     ? (seed: string) => GameOutcome 
-    : (seed: string, options: TOptions) => GameOutcome;
+    : (seed: string, options: TOptions) => GameOutcome<TResult>;
+  render: (outcome: GameOutcome<TResult>) => React.ReactNode;
 }
 
 export const games = {

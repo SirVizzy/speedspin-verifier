@@ -1,13 +1,16 @@
-import { Game, GameOutcomeStep } from "@/processors";
-import { z } from "zod";
+import { Game, GameOutcomeStep } from '@/processors';
+import { z } from 'zod';
 import seedrandom from 'seedrandom';
+import { cn } from '@/lib/utils';
 
 export type MinesOptions = {
   size: number;
   mines: number;
-}
+};
 
-export const mines: Game<MinesOptions> = {
+export type MinesResult = number[][];
+
+export const mines: Game<MinesOptions, MinesResult> = {
   id: 'mines',
   schema: z.object({
     size: z.number().min(3).max(10),
@@ -16,7 +19,7 @@ export const mines: Game<MinesOptions> = {
   process: (seed, options) => {
     const steps: GameOutcomeStep[] = [];
     const { size, mines } = options;
-    
+
     // Create empty grid
     const grid: number[][] = [];
     for (let i = 0; i < size; i++) {
@@ -25,7 +28,7 @@ export const mines: Game<MinesOptions> = {
 
     // Initialize random number generator with seed
     const rng = seedrandom(seed);
-    
+
     // Create array of all possible positions
     const possibilities = new Array(size ** 2).fill(0).map((_, i) => i);
 
@@ -41,7 +44,6 @@ export const mines: Game<MinesOptions> = {
 
       steps.push({
         title: 'Mine',
-        seed: seed,
         raw: value,
         metadata: {
           x,
@@ -52,17 +54,39 @@ export const mines: Game<MinesOptions> = {
       grid[y][x] = 1;
     }
 
-    // Convert grid to string representation
-    const result = grid.flat().join('');
-
     return {
-      result: result.toString(),
-      seed,
-      steps,
+      result: grid,
+      seed: seed,
+      steps: steps,
       metadata: {
         size,
         mines,
       },
     };
   },
-}
+  render: (outcome) => {
+    return (
+      <div className="flex">
+        <div
+          className="grid gap-1"
+          style={{
+            gridTemplateColumns: `repeat(${outcome.result.length}, 1fr)`,
+          }}
+        >
+          {outcome.result.map((row, i) => {
+            return row.map((cell, j) => {
+              return (
+                <div
+                  key={`${i}-${j}`}
+                  className={cn('size-6 bg-muted rounded-sm grid place-items-center text-xs', cell === 1 && 'bg-red-400')}
+                >
+                  {cell}
+                </div>
+              );
+            });
+          })}
+        </div>
+      </div>
+    );
+  },
+};

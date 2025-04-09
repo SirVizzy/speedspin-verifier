@@ -1,5 +1,5 @@
-import { Game } from "@/processors";
-import { z } from "zod";
+import { Game } from '@/processors';
+import { z } from 'zod';
 import seedrandom from 'seedrandom';
 
 export const roulette: Game = {
@@ -16,4 +16,5 @@ export const roulette: Game = {
       raw: value,
     };
   },
+  render: (outcome) => outcome.result,
 };

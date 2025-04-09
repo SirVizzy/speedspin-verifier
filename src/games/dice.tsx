@@ -16,4 +16,5 @@ export const dice: Game = {
       raw: raw,
     };
   },
+  render: (outcome) => outcome.result,
 };
