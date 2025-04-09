@@ -18,29 +18,22 @@ export const mines: Game<MinesOptions, MinesResult> = {
   }),
   process: (seed, options) => {
     const steps: GameOutcomeStep[] = [];
-    const { size, mines } = options;
-
-    // Create empty grid
     const grid: number[][] = [];
-    for (let i = 0; i < size; i++) {
-      grid.push(new Array(size).fill(0));
+
+    for (let i = 0; i < options.size; i++) {
+      grid.push(new Array(options.size).fill(0));
     }
 
-    // Initialize random number generator with seed
     const rng = seedrandom(seed);
+    const possibilities = new Array(options.size ** 2).fill(0).map((_, i) => i);
 
-    // Create array of all possible positions
-    const possibilities = new Array(size ** 2).fill(0).map((_, i) => i);
-
-    // Place mines randomly
-    for (let i = 0; i < mines; i++) {
+    for (let i = 0; i < options.mines; i++) {
       const value = rng();
       const possibilityIdx = Math.floor(value * possibilities.length);
-      const tileIdx = possibilities[possibilityIdx];
-      possibilities.splice(possibilityIdx, 1);
+      const tileId = possibilities[possibilityIdx];
 
-      const x = tileIdx % size;
-      const y = Math.floor(tileIdx / size);
+      const x = tileId % options.size;
+      const y = Math.floor(tileId / options.size);
 
       steps.push({
         title: 'Mine',
@@ -52,6 +45,7 @@ export const mines: Game<MinesOptions, MinesResult> = {
       });
 
       grid[y][x] = 1;
+      possibilities.splice(possibilityIdx, 1);
     }
 
     return {
@@ -59,8 +53,8 @@ export const mines: Game<MinesOptions, MinesResult> = {
       seed: seed,
       steps: steps,
       metadata: {
-        size,
-        mines,
+        size: options.size,
+        mines: options.mines,
       },
     };
   },
