@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { OutcomeVerifierResult } from './OutcomeVerifierResult';
 import { OutcomeVerifierForm } from './OutcomeVerifierForm';
 import { VerificationResult } from '@/types';
+import { Github } from 'lucide-react';
 
 export function OutcomeVerifier() {
   const [verificationResult, setVerificationResult] = useState<VerificationResult | null>(null);
@@ -19,6 +20,17 @@ export function OutcomeVerifier() {
       <CardContent className="space-y-6">
         <OutcomeVerifierForm onVerificationChange={setVerificationResult} />
         {verificationResult && <OutcomeVerifierResult verificationResult={verificationResult} />}
+        <div className="flex justify-end">
+          <a
+            href="https://github.com/SirVizzy/speedspin-verifier"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1.5 text-muted-foreground hover:text-foreground transition-colors"
+          >
+            <Github className="size-4" />
+            <span className="text-sm">View on GitHub</span>
+          </a>
+        </div>
       </CardContent>
     </Card>
   );
