@@ -64,10 +64,9 @@ export function OutcomeVerifier() {
   const selectedGame = form.watch('gamemode') as GameMode;
 
   async function onSubmit(values: Schema) {
+    const game = games[values.gamemode];
     const seed = `${values.serverSeed}:${values.clientSeed}:${values.nonce}`;
     const expectedHash = await getHashFrom(values.serverSeed);
-
-    const game = games[values.gamemode];
     const result = game.process(seed, values.options as never) as GameOutcome;
 
     setVerificationResult({
@@ -82,7 +81,10 @@ export function OutcomeVerifier() {
     <Card className="w-full">
       <CardHeader>
         <CardTitle>Outcome Verifier</CardTitle>
-        <CardDescription>Verify game outcomes using server seed, client seed, and nonce</CardDescription>
+        <CardDescription>
+          Verify the outcome of a game using the server seed, client seed, and nonce. By providing the server seed hash, you can verify
+          that the outcome has not been tampered with.
+        </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
         <Form {...form}>
