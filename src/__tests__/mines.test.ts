@@ -15,6 +15,7 @@ const TEST_CASES = [
 test('mines', () => {
   for (const testCase of TEST_CASES) {
     const result = mines.process(testCase.input, testCase.options);
-    expect(result.result).toBe(testCase.output);
+    const flat = result.result.flat();
+    expect(flat.join('')).toBe(testCase.output);
   }
 });
