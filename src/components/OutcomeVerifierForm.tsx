@@ -8,7 +8,6 @@ import { GameMode, GameOutcome } from '@/types';
 import { games } from '@/games';
 import { getHashFrom } from '@/helpers/crypto';
 import * as z from 'zod';
-import { baseSchema } from './baseSchema';
 import { mines } from '@/games/mines';
 import { blackjack } from '@/games/blackjack';
 import { roulette } from '@/games/roulette';
@@ -16,25 +15,32 @@ import { dice } from '@/games/dice';
 import { plinko } from '@/games/plinko';
 import { VerificationResult } from '@/types';
 
+const base = z.object({
+  clientSeed: z.string().min(1, 'Client seed is required'),
+  serverSeed: z.string().min(1, 'Server seed is required'),
+  serverSeedHash: z.string().min(1, 'Server seed hash is required'),
+  nonce: z.string().min(1, 'Nonce is required'),
+});
+
 const createSchema = () => {
   return z.discriminatedUnion('gamemode', [
-    baseSchema.extend({
+    base.extend({
       gamemode: z.literal('plinko'),
       options: plinko.schema,
     }),
-    baseSchema.extend({
+    base.extend({
       gamemode: z.literal('mines'),
       options: mines.schema,
     }),
-    baseSchema.extend({
+    base.extend({
       gamemode: z.literal('blackjack'),
       options: blackjack.schema,
     }),
-    baseSchema.extend({
+    base.extend({
       gamemode: z.literal('roulette'),
       options: roulette.schema,
     }),
-    baseSchema.extend({
+    base.extend({
       gamemode: z.literal('dice'),
       options: dice.schema,
     }),
