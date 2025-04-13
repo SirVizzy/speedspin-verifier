@@ -8,7 +8,7 @@ export const roulette: Game = {
   process: (seed) => {
     const rng = seedrandom(seed);
     const value = rng();
-    const number = Math.floor(value * 37); // 0-36 for European roulette
+    const number = Math.floor(value * 36);
 
     return {
       seed: seed,
