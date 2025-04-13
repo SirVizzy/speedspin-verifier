@@ -4,7 +4,7 @@ import seedrandom from 'seedrandom';
 
 export const dice: Game = {
   id: 'dice',
-  schema: z.object({}),
+  schema: z.void(),
   process: (seed) => {
     const rng = seedrandom(seed);
     const raw = rng();

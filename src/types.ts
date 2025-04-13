@@ -27,7 +27,7 @@ export type GameMode = 'plinko' | 'dice' | 'blackjack' | 'roulette' | 'mines';
 
 export type Game<TOptions = undefined, TResult = string> = {
   id: GameMode;
-  schema: z.ZodSchema<TOptions>;
+  schema: z.ZodSchema<TOptions> | z.ZodSchema<void>;
   process: (seed: string, options: TOptions) => GameOutcome<TResult>;
   render: (outcome: GameOutcome<TResult>) => React.ReactNode;
 };
